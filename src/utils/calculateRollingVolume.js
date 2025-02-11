@@ -1,32 +1,44 @@
-// Placeholder example for calculating cumulative volume over a 60-minute window
-const calculateRollingVolume = (stockData) => {
-    const rollingVolumes = {};
+const calculateRollingVolume = (stockData, averages, targetDates) => {
+    const crossoverTimes = {};
 
-    Object.keys(stockData).forEach((stock) => {
-        const stockEntries = stockData[stock];
+    targetDates.forEach((targetDate) => {
+        const dateAverages = averages[targetDate];
 
-        let cumulativeVolume = 0;
-        let startIndex = 0;
+        Object.keys(stockData).forEach((stock) => {
+            const stockEntries = stockData[stock]; 
+            const stockAverage = dateAverages[stock];
 
-        stockEntries.forEach((entry, index) => {
-            cumulativeVolume += entry.quantity;
+            if (!stockAverage) return;
 
-            // Remove entries older than 60 minutes (3600 seconds)
-            while (
-                stockEntries[startIndex] &&
-                new Date(entry.timestamp) - new Date(stockEntries[startIndex].timestamp) > 3600000
-            ) {
-                cumulativeVolume -= stockEntries[startIndex].quantity;
-                startIndex++;
+            let cumulativeVolume = 0;
+            let startIndex = 0;
+            let crossoverTimestamp = null;
+
+            for (let i = 0; i < stockEntries.length; i++) {
+                const entry = stockEntries[i];
+                cumulativeVolume += entry.quantity;
+
+                // Remove entries older than 60 minutes
+                while (
+                    stockEntries[startIndex] &&
+                    new Date(entry.timestamp) - new Date(stockEntries[startIndex].timestamp) > 3600000
+                ) {
+                    cumulativeVolume -= stockEntries[startIndex].quantity;
+                    startIndex++;
+                }
+
+                // Stop as soon as we find the first crossover
+                if (cumulativeVolume > stockAverage) {
+                    crossoverTimestamp = entry.timestamp;
+                    break;
+                }
             }
 
-            // Store the cumulative volume for this stock at this point in time
-            if (!rollingVolumes[stock]) rollingVolumes[stock] = [];
-            rollingVolumes[stock].push({ timestamp: entry.timestamp, cumulativeVolume });
+            crossoverTimes[stock] = crossoverTimestamp || 'None';
         });
     });
 
-    return rollingVolumes;
+    return crossoverTimes;
 };
 
 module.exports = { calculateRollingVolume };

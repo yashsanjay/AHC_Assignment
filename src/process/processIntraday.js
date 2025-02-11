@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { calculate30DayAverage } = require('../utils/calculate30DayAverage');
 const { calculateRollingVolume } = require('../utils/calculateRollingVolume');
-const { checkCrossOver } = require('../utils/checkCrossover');
 const csv = require('csv-parser');
 
 const dayDataPath = path.join(__dirname, '../data/day_data.csv');
@@ -41,11 +40,13 @@ const processIntraday = async () => {
                 })
                 .on('end', () => {
                     // 3. Calculate the rolling volume and check for crossover
-                    const rollingVolumes = calculateRollingVolume(stockData);
+                    // const rollingVolumes = calculateRollingVolume(stockData);
                     // console.log(rollingVolumes);
+                    const calrolvol = calculateRollingVolume(stockData, averages, targetDates);
+                    console.log(calrolvol);
                     
-                    const crossoverTimes = checkCrossOver(rollingVolumes, averages, targetDates);
-                    console.log(`Crossover Times for ${filePath}:`, crossoverTimes);
+                    // const crossoverTimes = checkCrossOver(rollingVolumes, averages, targetDates);
+                    // console.log(`Crossover Times for ${filePath}:`, crossoverTimes);
                 });
         });
     } catch (error) {
